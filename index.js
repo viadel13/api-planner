@@ -1,9 +1,13 @@
 const express = require('express');
 const admin = require("firebase-admin");
 const cors = require('cors');
+const appRoute = require('./routes/route.js')
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // for parsing application/json
+app.use(express.urlencoded({ extended: true }));
+app.use("/static", express.static("public"));
 
 require('dotenv').config();
 
@@ -15,42 +19,8 @@ admin.initializeApp({
 });
 
 const auth = admin.auth();
-app.get('/', (req, res)=>{
-    res.send('hello')
-})
 
-app.get("/hello/:nom", (req, res) =>{
-    const user = {
-        message : `Hello ${req.params.nom}`
-    };
-    console.log(user)
-    res.json(user);
-    res.send('ok')
-})
-
-app.get("/delete/:email", async (req, res) => {
-
-    try {
-        
-        const response = await auth.getUserByEmail(req.params.email)
-        
-        const uid = response.uid
-
-        if(response){
-            await auth.deleteUser(uid)
-            console.log('supprimer avec success')
-        }
-        else{
-            console.log('utilisateur introuvable')
-        }
-
-    } catch (error) {
-        console.log("Error fetching user data:", error);
-    }
-
-    res.send('ok')
-
-});
+app.use('/', appRoute);
 
 app.listen(port, ()=>{
     console.log(`le serveur est lance sur le port ${port}`)
