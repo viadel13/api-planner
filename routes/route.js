@@ -25,7 +25,7 @@ router.get("/sendMail/:email/:nom", (req, res) => {
         button: {
           color: "#22BC66",
           text: "Terminer l'inscription",
-          link: "https://www.dvplanner.com/inscription",
+          link: "https://project-planner-dun.vercel.app/createPassword",
         },
       },
       outro: "Si vous avez besoin d'aide, n'hésitez pas à nous contacter.",
