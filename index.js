@@ -1,24 +1,30 @@
 const express = require('express');
-const admin = require("firebase-admin");
 const cors = require('cors');
-const appRoute = require('./routes/route.js')
+const appRoute = require('./routes/route.js');
+const path = require('path')
 
 const app = express();
 app.use(cors());
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true }));
-app.use("/static", express.static("public"));
+
+// app.use(express.static('public', {
+//   setHeaders: (res, filePath) => {
+//     if (filePath.endsWith('.css')) {
+//       res.setHeader('Content-Type', 'text/css');
+//     }
+//   }
+// }));
+
+app.set("view engine", "ejs");
+app.use(express.static('public'))
+
+
+app.use('/css', express.static(path.join(__dirname, 'public/css')))
 
 require('dotenv').config();
 
 const port = process.env.PORT || 5000;
-const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-const auth = admin.auth();
 
 app.use('/', appRoute);
 

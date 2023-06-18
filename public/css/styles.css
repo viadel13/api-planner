@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;1,300&display=swap');
+
+body {
+  font-family: 'Nunito', sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  
+}
+
+
+
+/*CSS DU LOGIN*/
+
+.wrapperLogin {
+  min-height: 100vh;
+  background: linear-gradient(50deg, #1b394d 24%, #2691d9 4%, #2d7ea7 76%, #1B394D 67%);
+}
+.wrapperLogin .bande-failConnexion{
+  background: white;
+  width: 50%;
+  border-radius: 2px;
+  
+}
+
+.login {
+  width: 350px;
+  min-height: 460px;
+  border-radius: 15px;
+  padding: 50px;
+  color: black;
+  background-color: white;
+  /* box-shadow:inset -12px 9px 22px -8px rgba(154, 148, 146, 0.61); */
+  box-shadow: inset 2px 2px 30px #3c85ca;
+}
+
+
+@media screen and (min-width: 1024px) {
+  .login {
+    width: 450px;
+    height: 500px;
+    border-radius: 15px;
+    padding: 50px;
+    color: black;
+    background-color: white;
+    box-shadow: inset 2px 2px 30px #3c85ca;
+    /* box-shadow:inset -12px 9px 22px -8px rgba(154, 148, 146, 0.61); */
+  }
+  
+
+}
+@media screen and (max-width: 767px) {
+
+  .login {
+    width: 320px;
+    min-height: 460px;
+    border-radius: 15px;
+    padding: 50px;
+    color: black;
+    background-color: white;
+    /* box-shadow:inset -12px 9px 22px -8px rgba(154, 148, 146, 0.61); */
+    box-shadow: inset 2px 2px 30px #3c85ca;
+  }
+  
+  
+}
+
+
+
+form .divForm {
+  position: relative;
+  border-bottom: 2px solid #adadad;
+  margin: 30px 0;
+}
+
+
+
+.divForm input {
+  outline: none;
+  border: none;
+  background: none;
+  width: 100%;
+  /* height: 40px; */
+}
+
+.divForm label {
+  position: absolute;
+  color: #adadad;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: .5s;
+}
+
+.divForm .loadBarSpan::before {
+  content: '';
+  position: absolute;
+  top: 26px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #2691d9;
+  transition: .5s;
+
+}
+
+.divForm input:focus~label,
+.divForm input:valid~label {
+  top: -15px;
+  color: #2691d9;
+}
+
+.divForm input:focus~.loadBarSpan::before,
+.divForm input:valid~.loadBarSpan::before {
+  width: 100%;
+}
+
+.connect {
+  display: block;
+  height: 50px;
+  width: 100%;
+  border: none;
+  border-radius: 20px;
+  color: #e9f4fb;
+  position: relative;
+  background-color: #2671d9;
+  box-shadow: 0 6px #27a3dd;
+  font-weight: 700;
+}
+
+
+.connect:active {
+  box-shadow: 0 0 #27a3dd;
+  top: 6px;
+}
