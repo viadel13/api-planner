@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const moment = require('moment');
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
@@ -16,9 +17,10 @@ const auth = admin.auth();
 const db = admin.firestore();
 const usersCollection = db.collection("users");
 const key = []
+const keyData = {};
 
 const generateSecretKey = () => {
-  const saltRounds = 10;
+  const saltRounds = 5;
   const secretKey = bcrypt.genSaltSync(saltRounds);
   return secretKey;
 };
@@ -29,11 +31,18 @@ const generateUserId = () => {
 
 router.post("/register", (req, res) => {
   const { nom, email, phone, sexe, domaine, image, role } = req.body.dataRegister;
-
+  console.log(image)
   try {
     const userId = generateUserId();
     const secretKey = generateSecretKey();
     const userRef = usersCollection.doc(userId);
+    const expirationTime = Date.now() + 2 *60 * 1000;
+    const verificationToken = jwt.sign({expiration: expirationTime }, `${secretKey}`);
+    keyData[verificationToken] = {
+      secretKey: secretKey,
+      expiration: expirationTime,
+    };
+
     const newKey = {
       pass: `${userId}`
     }
@@ -50,8 +59,8 @@ router.post("/register", (req, res) => {
     userRef.set(newUser);
     // Ajout de l'objet utilisateur au tableau dataUsers
 
-    const verificationToken = jwt.sign({ userId: `${userId}` }, `${secretKey}`);
 
+    
     const mailGenerator = new Mailgen({
       theme: "default",
       product: {
@@ -61,7 +70,10 @@ router.post("/register", (req, res) => {
         // logo: 'https://example.com/logo.png'
       },
     });
-
+    
+    const expirationDuration = moment.duration(expirationTime - Date.now());
+    const expirationMinutes = expirationDuration.minutes();
+    const expirationSeconds = expirationDuration.seconds();
     // Génération du contenu de l'e-mail
     const mail = {
       body: {
@@ -73,10 +85,11 @@ router.post("/register", (req, res) => {
           button: {
             color: "#22BC66",
             text: "Terminer l'inscription",
-            link: `https://api-dvplanner-9cdb66a81978.herokuapp.com/set-password`,
+            link: `https://api-dvplanner-9cdb66a81978.herokuapp.com/set-password/${verificationToken}`,
+            // link: `http://127.0.0.1:5000/set-password/${verificationToken}`,
           },
         },
-        outro: "Si vous avez besoin d'aide, n'hésitez pas à nous contacter.",
+        outro: `Ce lien expirera dans ${expirationMinutes} minutes et ${expirationSeconds} secondes.<br> Si vous avez besoin d'aide, n'hésitez pas à nous contacter.`,
       },
     };
 
@@ -116,9 +129,30 @@ router.post("/register", (req, res) => {
   }
 });
 
-router.get("/set-password", (req, res) => {
-  res.render('set-password');
+
+
+router.get("/set-password/:token", (req, res) => {
+  const token = req.params.token;
+
+  try {
+    const keyInfo = keyData[token];
+
+    if (keyInfo) {
+      const currentTimestamp = Date.now();
+      if (currentTimestamp > keyInfo.expiration) {
+        res.render("lien-expire");
+      } else {
+        res.render("set-password");
+      }
+    } else {
+      res.send("Token invalide.");
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Erreur lors du traitement du token" });
+  }
 });
+
 
 router.post("/save-user", async (req, res) => {
   const passUser = req.body.pass;

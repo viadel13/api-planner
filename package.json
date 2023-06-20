@@ -19,6 +19,7 @@
     "firebase-admin": "^11.9.0",
     "jsonwebtoken": "^9.0.0",
     "mailgen": "^2.0.27",
+    "moment": "^2.29.4",
     "nodemailer": "^6.9.3"
   },
   "engines": {
