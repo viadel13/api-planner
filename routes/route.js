@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const moment = require('moment');
+const moment = require("moment");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
@@ -16,7 +16,7 @@ admin.initializeApp({
 const auth = admin.auth();
 const db = admin.firestore();
 const usersCollection = db.collection("users");
-const key = []
+const emailKey = [];
 const keyData = {};
 
 const generateSecretKey = () => {
@@ -30,37 +30,37 @@ const generateUserId = () => {
 };
 
 router.post("/register", (req, res) => {
-  const { nom, email, phone, sexe, domaine, image, role } = req.body.dataRegister;
-  console.log(image)
+  const { nom, email, phone, sexe, domaine, role } = req.body.dataRegister;
+
   try {
-    const userId = generateUserId();
     const secretKey = generateSecretKey();
-    const userRef = usersCollection.doc(userId);
-    const expirationTime = Date.now() + 2 *60 * 1000;
-    const verificationToken = jwt.sign({expiration: expirationTime }, `${secretKey}`);
+    const userRef = usersCollection.doc();
+    const expirationTime = Date.now() + 2 * 60 * 1000;
+    const verificationToken = jwt.sign(
+      { expiration: expirationTime },
+      `${secretKey}`
+    );
     keyData[verificationToken] = {
       secretKey: secretKey,
       expiration: expirationTime,
     };
 
-    const newKey = {
-      pass: `${userId}`
-    }
-    key.push(newKey)
+    const newEmail = {
+      email: `${email}`,
+    };
+    emailKey.push(newEmail);
     const newUser = {
       utilisateur: nom,
       email,
       phone,
       sexe,
       domaine,
-      image,
-      role
+      image: req.body.url,
+      role,
     };
     userRef.set(newUser);
     // Ajout de l'objet utilisateur au tableau dataUsers
 
-
-    
     const mailGenerator = new Mailgen({
       theme: "default",
       product: {
@@ -70,7 +70,7 @@ router.post("/register", (req, res) => {
         // logo: 'https://example.com/logo.png'
       },
     });
-    
+
     const expirationDuration = moment.duration(expirationTime - Date.now());
     const expirationMinutes = expirationDuration.minutes();
     const expirationSeconds = expirationDuration.seconds();
@@ -129,8 +129,6 @@ router.post("/register", (req, res) => {
   }
 });
 
-
-
 router.get("/set-password/:token", (req, res) => {
   const token = req.params.token;
 
@@ -153,46 +151,47 @@ router.get("/set-password/:token", (req, res) => {
   }
 });
 
-
 router.post("/save-user", async (req, res) => {
   const passUser = req.body.pass;
 
-  if(passUser){
-    if(passUser.length < 8){
-      res.redirect('set-password')
-    }
-    
-  try {
-    const userRef = db.collection("users").doc(`${key[0].pass}`);
-    const doc = await userRef.get();
-    if (!doc.exists) {
-      console.log("No such document!");
-    } else {
-      const{email} = doc.data()
-      auth.createUser({
-        email: `${email}`,
-        password: `${passUser}`,
-      })
-      .then((userRecord) => {
-        // See the UserRecord reference doc for the contents of userRecord.
-        console.log('Successfully created new user:', userRecord.uid);
-     
-      })
-      .catch((error) => {
-        console.log('Error creating new user:', error);
-      });
-    }
-    res.send('ok')
-  } catch (error) {
-    
+  if (!passUser || passUser.length < 8) {
+    res.render("set-password");
+    return;
   }
+
+    try {
+      const query = db
+        .collection("users")
+        .where("email", "==", `${emailKey[0].email}`);
+
+      const snapshot = await query.get();
+      if (snapshot.empty) {
+        console.log(
+          "Aucun document trouvé avec cette adresse e-mail!",
+          emailKey[0].email
+        );
+      } else {
+        snapshot.forEach(async (doc) => {
+          res.send("ok");
+          const { email } = doc.data();
+
+          const response = await auth.createUser({
+            email: `${email}`,
+            password: `${passUser}`,
+          });
+
+          if (response) {
+            console.log(
+              "Successfully created new user:",
+             response
+            );
+          }
+        });
+      }
+    } catch (error) {
+      console.log("Error creating new user:", error);
+    }
   
-  }
-  else{
-    res.redirect('set-password')
-  }
-
-
 });
 
 router.get("/", (req, res) => {
