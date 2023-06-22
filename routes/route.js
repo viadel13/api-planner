@@ -16,7 +16,7 @@ admin.initializeApp({
 const auth = admin.auth();
 const db = admin.firestore();
 const usersCollection = db.collection("users");
-const emailKey = [];
+let emailKey = '';
 const keyData = {};
 
 const generateSecretKey = () => {
@@ -54,11 +54,7 @@ router.post("/register", authentKey, (req, res) => {
       secretKey: secretKey,
       expiration: expirationTime,
     };
-
-    const newEmail = {
-      email: `${email}`,
-    };
-    emailKey.push(newEmail);
+    emailKey = email;
     const newUser = {
       utilisateur: nom,
       email,
@@ -222,11 +218,11 @@ router.post("/save-user", async (req, res) => {
   }
 
   try {
-    const query = db.collection("users").where("email", "==", `${emailKey[0].email}`);
+    const query = db.collection("users").where("email", "==", `${emailKey}`);
 
     const snapshot = await query.get();
     if (snapshot.empty) {
-      console.log("Aucun document trouvé avec cette adresse e-mail!", emailKey[0].email);
+      console.log("Aucun document trouvé avec cette adresse e-mail!", emailKey);
     } else {
       let userExists = false;
 
