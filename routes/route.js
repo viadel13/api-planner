@@ -24,12 +24,22 @@ const generateSecretKey = () => {
   const secretKey = bcrypt.genSaltSync(saltRounds);
   return secretKey;
 };
-const generateUserId = () => {
-  const userId = bcrypt.genSaltSync();
-  return userId;
+// const generateUserId = () => {
+//   const userId = bcrypt.genSaltSync();
+//   return userId;
+// };
+
+const authentKey = (req, res, next) => {
+  const apiKey = req.headers["apikey"];
+  const key = process.env.APIKEY;
+  if (apiKey === key) {
+    next();
+  } else {
+    res.status(401).json({ message: "Unauthorized " });
+  }
 };
 
-router.post("/register", (req, res) => {
+router.post("/register", authentKey, (req, res) => {
   const { nom, email, phone, sexe, domaine, role } = req.body.dataRegister;
 
   try {
@@ -151,47 +161,109 @@ router.get("/set-password/:token", (req, res) => {
   }
 });
 
+// router.post("/save-user", async (req, res) => {
+//   const passUser = req.body.pass;
+//   if (!passUser || passUser.length < 8) {
+//     res.render("set-password");
+//     return;
+//   }
+
+//   try {
+//     const query = db
+//       .collection("users")
+//       .where("email", "==", `${emailKey[0].email}`);
+
+//     const snapshot = await query.get();
+//     if (snapshot.empty) {
+//       console.log(
+//         "Aucun document trouvé avec cette adresse e-mail!",
+//         emailKey[0].email
+//       );
+//     } else {
+//       snapshot.forEach(async (doc) => {
+//         const { email } = doc.data();
+//         // Vérifier si l'utilisateur est déjà authentifié
+     
+      
+//         const response = await auth.createUser({
+//           email: `${email}`,
+//           password: `${passUser}`,
+//         });
+
+//         if (response) {
+//           console.log("Successfully created new user:", response);
+//           res.render("success");
+//         }
+      
+//       });
+
+//       // const user = await auth.getUserByEmail(emailKey[0].email);
+//       // if (user) {
+//       //   console.log("L'utilisateur est déjà authentifié");
+//       //   res.render("already-authenticated");
+//       // }
+
+//     }
+//   } catch (error) {
+//     if (error.code === "auth/email-already-exists") {
+//       console.log("Adresse e-mail déjà utilisée par un autre compte");
+//       // Traitez cette erreur de manière appropriée (redirection, message d'erreur, etc.)
+//       res.render("already-authenticated");
+//     } else {
+//       console.log("Error creating new user:", error);
+//     }
+//   }
+// });
 router.post("/save-user", async (req, res) => {
   const passUser = req.body.pass;
-
   if (!passUser || passUser.length < 8) {
     res.render("set-password");
     return;
   }
 
-    try {
-      const query = db
-        .collection("users")
-        .where("email", "==", `${emailKey[0].email}`);
+  try {
+    const query = db.collection("users").where("email", "==", `${emailKey[0].email}`);
 
-      const snapshot = await query.get();
-      if (snapshot.empty) {
-        console.log(
-          "Aucun document trouvé avec cette adresse e-mail!",
-          emailKey[0].email
-        );
-      } else {
-        snapshot.forEach(async (doc) => {
-          res.send("ok");
-          const { email } = doc.data();
+    const snapshot = await query.get();
+    if (snapshot.empty) {
+      console.log("Aucun document trouvé avec cette adresse e-mail!", emailKey[0].email);
+    } else {
+      let userExists = false;
 
+      snapshot.forEach(async (doc) => {
+        const { email } = doc.data();
+        
+        try {
           const response = await auth.createUser({
             email: `${email}`,
             password: `${passUser}`,
           });
 
           if (response) {
-            console.log(
-              "Successfully created new user:",
-             response
-            );
+            console.log("Successfully created new user:", response);
+            res.render("success");
           }
-        });
+        } catch (error) {
+          if (error.code === "auth/email-already-exists") {
+            console.log("Adresse e-mail déjà utilisée par un autre compte");
+            // Traitez cette erreur de manière appropriée (redirection, message d'erreur, etc.)
+            res.render("already-authenticated");
+          } else {
+            console.log("Error creating new user:", error);
+          }
+        }
+
+        userExists = true;
+      });
+
+      if (userExists) {
+        console.log("L'utilisateur est déjà authentifié");
+        res.render("already-authenticated");
       }
-    } catch (error) {
-      console.log("Error creating new user:", error);
     }
-  
+  } catch (error) {
+    console.log("Error retrieving user from Firestore:", error);
+  }
 });
 
 router.get("/", (req, res) => {

@@ -60,10 +60,14 @@ body {
     /* box-shadow:inset -12px 9px 22px -8px rgba(154, 148, 146, 0.61); */
     box-shadow: inset 2px 2px 30px #3c85ca;
   }
-  
+  .dv{
+    font-size: 0.9em;
+  }
   
 }
-
+a{
+  text-decoration: none;
+}
 
 
 form .divForm {
