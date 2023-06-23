@@ -157,59 +157,6 @@ router.get("/set-password/:token", (req, res) => {
   }
 });
 
-// router.post("/save-user", async (req, res) => {
-//   const passUser = req.body.pass;
-//   if (!passUser || passUser.length < 8) {
-//     res.render("set-password");
-//     return;
-//   }
-
-//   try {
-//     const query = db
-//       .collection("users")
-//       .where("email", "==", `${emailKey[0].email}`);
-
-//     const snapshot = await query.get();
-//     if (snapshot.empty) {
-//       console.log(
-//         "Aucun document trouvé avec cette adresse e-mail!",
-//         emailKey[0].email
-//       );
-//     } else {
-//       snapshot.forEach(async (doc) => {
-//         const { email } = doc.data();
-//         // Vérifier si l'utilisateur est déjà authentifié
-     
-      
-//         const response = await auth.createUser({
-//           email: `${email}`,
-//           password: `${passUser}`,
-//         });
-
-//         if (response) {
-//           console.log("Successfully created new user:", response);
-//           res.render("success");
-//         }
-      
-//       });
-
-//       // const user = await auth.getUserByEmail(emailKey[0].email);
-//       // if (user) {
-//       //   console.log("L'utilisateur est déjà authentifié");
-//       //   res.render("already-authenticated");
-//       // }
-
-//     }
-//   } catch (error) {
-//     if (error.code === "auth/email-already-exists") {
-//       console.log("Adresse e-mail déjà utilisée par un autre compte");
-//       // Traitez cette erreur de manière appropriée (redirection, message d'erreur, etc.)
-//       res.render("already-authenticated");
-//     } else {
-//       console.log("Error creating new user:", error);
-//     }
-//   }
-// });
 router.post("/save-user", async (req, res) => {
   const passUser = req.body.pass;
   if (!passUser || passUser.length < 8) {
@@ -262,6 +209,46 @@ router.post("/save-user", async (req, res) => {
   }
 });
 
+router.get("/delete/:email", authentKey, async (req, res) => {
+
+  try {
+      
+      const response = await auth.getUserByEmail(req.params.email)
+      
+      const uid = response.uid
+
+      if(response){
+          await auth.deleteUser(uid)
+          console.log('supprimer avec success')
+          res.json(response)
+      }
+      else{
+          console.log('utilisateur introuvable')
+      }
+
+  } catch (error) {
+      console.log("Error fetching user data:", error);
+  }
+
+ 
+
+});
+
+router.get("/verify-success", authentKey, async (req, res) => {
+  try {
+    const userList = await admin.auth().listUsers();
+
+    const emailList = userList.users.map((user) => user.email);
+
+    console.log("List of authenticated users:", emailList);
+
+    res.json(emailList); // Envoyer la liste des adresses e-mail en tant que réponse
+
+  } catch (error) {
+    console.log("Error fetching authenticated users:", error);
+    res.sendStatus(500); // En cas d'erreur, envoyer une réponse d'erreur au client
+  }
+});
 router.get("/", (req, res) => {
   res.send("hello");
 });
