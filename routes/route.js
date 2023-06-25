@@ -6,7 +6,7 @@ require("dotenv").config();
 const Mailgen = require("mailgen");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const path = require("path");
+
 
 const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
 admin.initializeApp({
@@ -55,16 +55,7 @@ router.post("/register", authentKey, (req, res) => {
       expiration: expirationTime,
     };
     emailKey = email;
-    const newUser = {
-      utilisateur: nom,
-      email,
-      phone,
-      sexe,
-      domaine,
-      image: req.body.url,
-      role,
-    };
-    userRef.set(newUser);
+  
     // Ajout de l'objet utilisateur au tableau dataUsers
 
     const mailGenerator = new Mailgen({
@@ -123,12 +114,21 @@ router.post("/register", authentKey, (req, res) => {
     transporter
       .sendMail(message)
       .then((result) => {
-        console.log(result);
+        const newUser = {
+          utilisateur: nom,
+          email,
+          phone,
+          sexe,
+          domaine,
+          image: req.body.url,
+          role,
+        };
+        userRef.set(newUser);
+        res.json('enregistrer avec success');
       })
       .catch((err) => {
-        console.log(err);
+        res.json('Message non envoye et erreur inscription');
       });
-    res.send("email send");
   } catch (error) {
     console.error("Erreur lors de l'inscription :", error);
     res.status(500).json({ message: "Erreur lors de l'inscription" });
