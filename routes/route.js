@@ -82,7 +82,7 @@ router.post("/register", authentKey, (req, res) => {
           button: {
             color: "#22BC66",
             text: "Terminer l'inscription",
-            link: `https://api-dvplanner-9cdb66a81978.herokuapp.com/set-password/${verificationToken}`,
+            link: `https://api-planner-y202.onrender.com/set-password/${verificationToken}`,
             // link: `http://127.0.0.1:5000/set-password/${verificationToken}`,
           },
         },
