@@ -1,4 +1,3 @@
-const router = require("express").Router();
 const moment = require("moment");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
@@ -6,7 +5,6 @@ require("dotenv").config();
 const Mailgen = require("mailgen");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 
 const serviceAccount = JSON.parse(process.env.SERVICE_ACCOUNT_KEY);
 admin.initializeApp({
@@ -16,7 +14,7 @@ admin.initializeApp({
 const auth = admin.auth();
 const db = admin.firestore();
 const usersCollection = db.collection("users");
-let emailKey = '';
+let emailKey = "";
 const keyData = {};
 
 const generateSecretKey = () => {
@@ -24,10 +22,6 @@ const generateSecretKey = () => {
   const secretKey = bcrypt.genSaltSync(saltRounds);
   return secretKey;
 };
-// const generateUserId = () => {
-//   const userId = bcrypt.genSaltSync();
-//   return userId;
-// };
 
 const authentKey = (req, res, next) => {
   const apiKey = req.headers["apikey"];
@@ -39,7 +33,7 @@ const authentKey = (req, res, next) => {
   }
 };
 
-router.post("/register", authentKey, (req, res) => {
+const register = (req, res) => {
   const { nom, email, phone, sexe, domaine, role } = req.body.dataRegister;
 
   try {
@@ -55,7 +49,7 @@ router.post("/register", authentKey, (req, res) => {
       expiration: expirationTime,
     };
     emailKey = email;
-  
+
     // Ajout de l'objet utilisateur au tableau dataUsers
 
     const mailGenerator = new Mailgen({
@@ -63,7 +57,8 @@ router.post("/register", authentKey, (req, res) => {
       product: {
         // Paramètres du produit (facultatif)
         name: "DV-PLANNER",
-        link: `https://project-planner-dun.vercel.app`,
+        // link: `http://127.0.0.1:5000/`,
+        link: `https://project-planner-dun.vercel.app/`,
         // logo: 'https://example.com/logo.png'
       },
     });
@@ -124,18 +119,18 @@ router.post("/register", authentKey, (req, res) => {
           role,
         };
         userRef.set(newUser);
-        res.json('enregistrer avec success');
+        res.json("enregistrer avec success");
       })
       .catch((err) => {
-        res.json('Message non envoye et erreur inscription');
+        res.json("Message non envoye et erreur inscription");
       });
   } catch (error) {
     console.error("Erreur lors de l'inscription :", error);
     res.status(500).json({ message: "Erreur lors de l'inscription" });
   }
-});
+};
 
-router.get("/set-password/:token", (req, res) => {
+const setPassword = (req, res) => {
   const token = req.params.token;
 
   try {
@@ -155,9 +150,9 @@ router.get("/set-password/:token", (req, res) => {
     console.log(error);
     res.status(500).json({ message: "Erreur lors du traitement du token" });
   }
-});
+};
 
-router.post("/save-user", async (req, res) => {
+const saveUser = async (req, res) => {
   const passUser = req.body.pass;
   if (!passUser || passUser.length < 8) {
     res.render("set-password");
@@ -175,7 +170,7 @@ router.post("/save-user", async (req, res) => {
 
       snapshot.forEach(async (doc) => {
         const { email } = doc.data();
-        
+
         try {
           const response = await auth.createUser({
             email: `${email}`,
@@ -207,34 +202,31 @@ router.post("/save-user", async (req, res) => {
   } catch (error) {
     console.log("Error retrieving user from Firestore:", error);
   }
-});
+};
 
-router.get("/delete/:email", authentKey, async (req, res) => {
-
+const deleteUser = async (req, res) => {
   try {
-      
-      const response = await auth.getUserByEmail(req.params.email)
-      
-      const uid = response.uid
+    const response = await auth.getUserByEmail(req.params.email);
 
-      if(response){
-          await auth.deleteUser(uid)
-          console.log('supprimer avec success')
-          res.json(response)
-      }
-      else{
-          console.log('utilisateur introuvable')
-      }
+    const uid = response.uid;
 
+    if (response) {
+      await auth.deleteUser(uid);
+      console.log("supprimer avec success");
+      res.json(response);
+    } else {
+      console.log("utilisateur introuvable");
+    }
   } catch (error) {
-      console.log("Error fetching user data:", error);
+    console.log("Error fetching user data:", error);
   }
+};
 
- 
+const editUser = async (req, res) =>{
 
-});
+};
 
-router.get("/verify-success", authentKey, async (req, res) => {
+const verifySuccess = async (req, res)=>{
   try {
     const userList = await admin.auth().listUsers();
 
@@ -248,9 +240,14 @@ router.get("/verify-success", authentKey, async (req, res) => {
     console.log("Error fetching authenticated users:", error);
     res.sendStatus(500); // En cas d'erreur, envoyer une réponse d'erreur au client
   }
-});
-router.get("/", (req, res) => {
-  res.send("hello");
-});
+}
 
-module.exports = router;
+module.exports = {
+  register,
+  authentKey,
+  setPassword,
+  saveUser,
+  deleteUser,
+  verifySuccess,
+  editUser,
+};

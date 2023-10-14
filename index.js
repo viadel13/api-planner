@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const appRoute = require('./routes/route.js');
+const plannerRoute = require('./routes/planner.route.js');
 const path = require('path')
 
 const app = express();
@@ -26,7 +26,7 @@ require('dotenv').config();
 
 const port = process.env.PORT || 5000;
 
-app.use('/', appRoute);
+app.use('/', plannerRoute);
 
 app.listen(port, ()=>{
     console.log(`le serveur est lance sur le port ${port}`)
